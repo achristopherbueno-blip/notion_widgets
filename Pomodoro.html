@@ -1,106 +1,315 @@
-<!DOCTYPE html><html lang="en-AU"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Notion Pomodoro - Dark Mode</title><style>:root{--bg-color:#191919;--text-color:#ffffff;--accent-color:#eb5757;--secondary-bg:#2f2f2f;--border-color:#373737;--progress-bg:#373737}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;background-color:var(--bg-color);color:var(--text-color);display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden}.container{text-align:center;padding:15px;width:100%;max-width:280px;position:relative}.settings-toggle{position:absolute;top:0;right:10px;cursor:pointer;font-size:1.2rem;opacity:.6;transition:opacity .2s;background:0 0;border:none;color:var(--text-color)}.settings-toggle:hover{opacity:1}#timer{font-size:3.5rem;font-weight:700;margin:0;line-height:1.1;font-variant-numeric:tabular-nums}@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.1);color:#ff5e5e}100%{transform:scale(1)}}.flash{animation:pulse .5s ease-in-out 3}.progress-container{width:100%;height:6px;background-color:var(--progress-bg);border-radius:10px;margin:15px 0;overflow:hidden}#progressBar{height:100%;width:0%;background-color:var(--accent-color);transition:width 1s linear}.status-box{margin-bottom:5px}.status{text-transform:uppercase;letter-spacing:1px;font-size:.7rem;font-weight:700;color:var(--accent-color)}.counter{font-size:.8rem;color:#9b9b9b}.controls{display:flex;gap:8px;justify-content:center}.controls button{background:var(--secondary-bg);border:1px solid var(--border-color);color:var(--text-color);padding:6px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.8rem;transition:all .2s}#startStop{background:var(--accent-color);color:#fff;border:none;min-width:70px}#startStop:hover{filter:brightness(1.2)}.controls button:hover{background:#3f3f3f}#settingsPanel{display:none;position:absolute;top:40px;left:50%;transform:translateX(-50%);background:#252525;border:1px solid var(--border-color);box-shadow:0 4px 20px rgba(0,0,0,.4);padding:15px;border-radius:8px;z-index:10;width:200px;grid-template-columns:1fr 1fr;gap:10px;font-size:.75rem;text-align:left}#settingsPanel.active{display:grid}label{color:#ccc}input{width:100%;padding:3px;border:1px solid #444;background:#191919;color:#fff;border-radius:4px;box-sizing:border-box}</style></head><body><div class="container"><button class="settings-toggle" id="toggleBtn">⚙️</button><div id="settingsPanel"><label>Work: <input type="number" id="workDur" value="25"></label><label>Short: <input type="number" id="shortDur" value="5"></label><label>Long: <input type="number" id="longDur" value="15"></label><label>Interval: <input type="number" id="interval" value="4"></label></div><div class="status-box"><div id="status" class="status">Focus Time</div><div id="sessionDisplay" class="counter">Pomodoro #1</div></div><div id="timer">25:00</div><div class="progress-container"><div id="progressBar"></div></div><div class="controls"><button id="startStop">Start</button><button id="skip">Skip</button><button id="reset">Reset</button></div></div><audio id="beep" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio><script>let timeLeft;
-      let totalTime;
-      let timerId = null;
-      let isRunning = false;
-      let mode = 'work';
-      let sessionsCompleted = 0;
-      const timerDisplay = document.getElementById('timer');
-      const statusDisplay = document.getElementById('status');
-      const sessionDisplay = document.getElementById('sessionDisplay');
-      const startBtn = document.getElementById('startStop');
-      const progressBar = document.getElementById('progressBar');
-      const settingsPanel = document.getElementById('settingsPanel');
-      const beep = document.getElementById('beep');
-
-      function updateDisplay() {
-        const mins = Math.floor(timeLeft / 60);
-        const secs = timeLeft % 60;
-        timerDisplay.textContent = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-        const progressPercent = ((totalTime - timeLeft) / totalTime) * 100;
-        progressBar.style.width = `${progressPercent}%`;
-        if (mode === 'work') {
-          sessionDisplay.textContent = `Pomodoro #${sessionsCompleted + 1}`;
-          document.documentElement.style.setProperty('--accent-color', '#eb5757');
-        } else {
-          sessionDisplay.textContent = `Break Time`;
-          document.documentElement.style.setProperty('--accent-color', '#2eaadc');
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Notion Pomodoro - Transparent</title>
+    <style>
+        :root {
+            /* Changed background to transparent */
+            --bg-color: rgba(0, 0, 0, 0); 
+            --text-color: #ffffff;
+            --accent-color: #eb5757;
+            --secondary-bg: #2f2f2f;
+            --border-color: #373737;
+            --progress-bg: #373737
         }
-      }
 
-      function initTimer() {
-        const work = document.getElementById('workDur').value * 60;
-        const short = document.getElementById('shortDur').value * 60;
-        const long = document.getElementById('longDur').value * 60;
-        if (mode === 'work') {
-          totalTime = work;
-          statusDisplay.textContent = "Focus Time";
-        } else if (mode === 'short') {
-          totalTime = short;
-          statusDisplay.textContent = "Short Break";
-        } else {
-          totalTime = long;
-          statusDisplay.textContent = "Long Break";
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden
         }
-        timeLeft = totalTime;
-        updateDisplay();
-        timerDisplay.classList.remove('flash');
-      }
 
-      function toggleTimer() {
-        if (isRunning) {
-          clearInterval(timerId);
-          startBtn.textContent = 'Start';
-        } else {
-          // Wake up audio context
-          beep.play().then(() => {
-            beep.pause();
-            beep.currentTime = 0;
-          }).catch(() => {});
-          timerId = setInterval(() => {
-            timeLeft--;
-            updateDisplay();
-            if (timeLeft <= 0) {
-              finishSession();
+        .container {
+            text-align: center;
+            padding: 15px;
+            width: 100%;
+            max-width: 280px;
+            position: relative;
+            background: transparent; /* Ensure container is also transparent */
+        }
+
+        .settings-toggle {
+            position: absolute;
+            top: 0;
+            right: 10px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            opacity: .6;
+            transition: opacity .2s;
+            background: 0 0;
+            border: none;
+            color: var(--text-color)
+        }
+
+        .settings-toggle:hover {
+            opacity: 1
+        }
+
+        #timer {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin: 0;
+            line-height: 1.1;
+            font-variant-numeric: tabular-nums
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1) }
+            50% { transform: scale(1.1); color: #ff5e5e }
+            100% { transform: scale(1) }
+        }
+
+        .flash {
+            animation: pulse .5s ease-in-out 3
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background-color: var(--progress-bg);
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow: hidden
+        }
+
+        #progressBar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--accent-color);
+            transition: width 1s linear
+        }
+
+        .status-box {
+            margin-bottom: 5px
+        }
+
+        .status {
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: .7rem;
+            font-weight: 700;
+            color: var(--accent-color)
+        }
+
+        .counter {
+            font-size: .8rem;
+            color: #9b9b9b
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            justify-content: center
+        }
+
+        .controls button {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: .8rem;
+            transition: all .2s
+        }
+
+        #startStop {
+            background: var(--accent-color);
+            color: #fff;
+            border: none;
+            min-width: 70px
+        }
+
+        #startStop:hover {
+            filter: brightness(1.2)
+        }
+
+        .controls button:hover {
+            background: #3f3f3f
+        }
+
+        #settingsPanel {
+            display: none;
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #252525;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .4);
+            padding: 15px;
+            border-radius: 8px;
+            z-index: 10;
+            width: 200px;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: .75rem;
+            text-align: left
+        }
+
+        #settingsPanel.active {
+            display: grid
+        }
+
+        label {
+            color: #ccc
+        }
+
+        input {
+            width: 100%;
+            padding: 3px;
+            border: 1px solid #444;
+            background: #191919;
+            color: #fff;
+            border-radius: 4px;
+            box-sizing: border-box
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="settings-toggle" id="toggleBtn">⚙️</button>
+        <div id="settingsPanel">
+            <label>Work: <input type="number" id="workDur" value="25"></label>
+            <label>Short: <input type="number" id="shortDur" value="5"></label>
+            <label>Long: <input type="number" id="longDur" value="15"></label>
+            <label>Interval: <input type="number" id="interval" value="4"></label>
+        </div>
+        <div class="status-box">
+            <div id="status" class="status">Focus Time</div>
+            <div id="sessionDisplay" class="counter">Pomodoro #1</div>
+        </div>
+        <div id="timer">25:00</div>
+        <div class="progress-container">
+            <div id="progressBar"></div>
+        </div>
+        <div class="controls">
+            <button id="startStop">Start</button>
+            <button id="skip">Skip</button>
+            <button id="reset">Reset</button>
+        </div>
+    </div>
+    <audio id="beep" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+    <script>
+        let timeLeft;
+        let totalTime;
+        let timerId = null;
+        let isRunning = false;
+        let mode = 'work';
+        let sessionsCompleted = 0;
+        const timerDisplay = document.getElementById('timer');
+        const statusDisplay = document.getElementById('status');
+        const sessionDisplay = document.getElementById('sessionDisplay');
+        const startBtn = document.getElementById('startStop');
+        const progressBar = document.getElementById('progressBar');
+        const settingsPanel = document.getElementById('settingsPanel');
+        const beep = document.getElementById('beep');
+
+        function updateDisplay() {
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            timerDisplay.textContent = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            const progressPercent = ((totalTime - timeLeft) / totalTime) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+            if (mode === 'work') {
+                sessionDisplay.textContent = `Pomodoro #${sessionsCompleted + 1}`;
+                document.documentElement.style.setProperty('--accent-color', '#eb5757');
+            } else {
+                sessionDisplay.textContent = `Break Time`;
+                document.documentElement.style.setProperty('--accent-color', '#2eaadc');
             }
-          }, 1000);
-          startBtn.textContent = 'Pause';
         }
-        isRunning = !isRunning;
-      }
 
-      function finishSession() {
-        beep.play();
-        timerDisplay.classList.add('flash');
-        setTimeout(handleSwitch, 1500);
-      }
-
-      function handleSwitch() {
-        clearInterval(timerId);
-        isRunning = false;
-        startBtn.textContent = 'Start';
-        if (mode === 'work') {
-          sessionsCompleted++;
-          const interval = parseInt(document.getElementById('interval').value);
-          mode = (sessionsCompleted % interval === 0) ? 'long' : 'short';
-        } else {
-          mode = 'work';
+        function initTimer() {
+            const work = document.getElementById('workDur').value * 60;
+            const short = document.getElementById('shortDur').value * 60;
+            const long = document.getElementById('longDur').value * 60;
+            if (mode === 'work') {
+                totalTime = work;
+                statusDisplay.textContent = "Focus Time";
+            } else if (mode === 'short') {
+                totalTime = short;
+                statusDisplay.textContent = "Short Break";
+            } else {
+                totalTime = long;
+                statusDisplay.textContent = "Long Break";
+            }
+            timeLeft = totalTime;
+            updateDisplay();
+            timerDisplay.classList.remove('flash');
         }
+
+        function toggleTimer() {
+            if (isRunning) {
+                clearInterval(timerId);
+                startBtn.textContent = 'Start';
+            } else {
+                beep.play().then(() => {
+                    beep.pause();
+                    beep.currentTime = 0;
+                }).catch(() => {});
+                timerId = setInterval(() => {
+                    timeLeft--;
+                    updateDisplay();
+                    if (timeLeft <= 0) {
+                        finishSession();
+                    }
+                }, 1000);
+                startBtn.textContent = 'Pause';
+            }
+            isRunning = !isRunning;
+        }
+
+        function finishSession() {
+            beep.play();
+            timerDisplay.classList.add('flash');
+            setTimeout(handleSwitch, 1500);
+        }
+
+        function handleSwitch() {
+            clearInterval(timerId);
+            isRunning = false;
+            startBtn.textContent = 'Start';
+            if (mode === 'work') {
+                sessionsCompleted++;
+                const interval = parseInt(document.getElementById('interval').value);
+                mode = (sessionsCompleted % interval === 0) ? 'long' : 'short';
+            } else {
+                mode = 'work';
+            }
+            initTimer();
+        }
+
+        document.getElementById('toggleBtn').addEventListener('click', () => {
+            settingsPanel.classList.toggle('active');
+        });
+
+        startBtn.addEventListener('click', toggleTimer);
+        document.getElementById('skip').addEventListener('click', handleSwitch);
+        document.getElementById('reset').addEventListener('click', () => {
+            clearInterval(timerId);
+            isRunning = false;
+            sessionsCompleted = 0;
+            mode = 'work';
+            startBtn.textContent = 'Start';
+            initTimer();
+        });
+
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('change', initTimer);
+        });
+
         initTimer();
-      }
-      document.getElementById('toggleBtn').addEventListener('click', () => {
-        settingsPanel.classList.toggle('active');
-      });
-      startBtn.addEventListener('click', toggleTimer);
-      document.getElementById('skip').addEventListener('click', handleSwitch);
-      document.getElementById('reset').addEventListener('click', () => {
-        clearInterval(timerId);
-        isRunning = false;
-        sessionsCompleted = 0;
-        mode = 'work';
-        startBtn.textContent = 'Start';
-        initTimer();
-      });
-      document.querySelectorAll('input').forEach(input => {
-        input.addEventListener('change', initTimer);
-      });
-      initTimer();</script></body></html>
+    </script>
+</body>
+</html>
