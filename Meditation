@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zen Box Breath</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #fafafa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f5f5f5;
+            --text-primary: #1a1a1a;
+            --text-secondary: #6b6b6b;
+            --text-tertiary: #9b9b9b;
+            --accent: #7c9a92;
+            --accent-light: #a4b8b2;
+            --accent-dark: #5d7b73;
+            --border: #e0e0e0;
+            --shadow: rgba(0, 0, 0, 0.08);
+            --ring-bg: #e8e8e8;
+        }
+
+        body.dark-mode {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #252525;
+            --bg-tertiary: #2f2f2f;
+            --text-primary: #e8e8e8;
+            --text-secondary: #a0a0a0;
+            --text-tertiary: #707070;
+            --accent: #8fac9f;
+            --accent-light: #a4b8b2;
+            --accent-dark: #6d8e82;
+            --border: #3a3a3a;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --ring-bg: #333333;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            background: var(--bg-secondary);
+            border-radius: 24px;
+            padding: 40px 32px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 8px 32px var(--shadow);
+            transition: background 0.3s ease;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .theme-toggle {
+            background: var(--bg-tertiary);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            color: var(--text-primary);
+            font-size: 1.2rem;
+        }
+
+        .theme-toggle:hover {
+            background: var(--border);
+            transform: scale(1.05);
+        }
+
+        .visual-box {
+            position: relative;
+            width: 240px;
+            height: 240px;
+            margin: 0 auto 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        svg {
+            position: absolute;
+            transform: rotate(-90deg);
+            width: 100%;
+            height: 100%;
+        }
+
+        .progress-bg {
+            fill: none;
+            stroke: var(--ring-bg);
+            stroke-width: 8;
+            transition: stroke 0.3s ease;
+        }
+
+        .progress-bar {
+            fill: none;
+            stroke: var(--accent);
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-dasharray: 678;
+            stroke-dashoffset: 678;
+            transition: stroke 0.3s ease, stroke-dashoffset 1s linear;
+        }
+
+        .breath-circle {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            border-radius: 50%;
+            box-shadow: 0 8px 32px rgba(124, 154, 146, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            transition: transform 4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .breath-circle::before {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-light), var(--accent));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .breath-circle.active::before {
+            opacity: 0.3;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.1); opacity: 0.1; }
+        }
+
+        .breath-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            filter: brightness(0) invert(1);
+        }
+
+        .breath-text {
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .inhale { transform: scale(1.5); }
+        .hold-full { transform: scale(1.5); }
+        .exhale { transform: scale(1); }
+        .hold-empty { transform: scale(1); }
+
+        .timer-section {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .status-text {
+            color: var(--accent);
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .timer-display {
+            font-size: 3rem;
+            font-weight: 300;
+            color: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .presets {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .preset-btn {
+            background: var(--bg-tertiary);
+            border: 2px solid transparent;
+            color: var(--text-secondary);
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .preset-btn:hover {
+            background: var(--border);
+            border-color: var(--accent-light);
+        }
+
+        .preset-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .settings-section {
+            background: var(--bg-tertiary);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            transition: background 0.3s ease;
+        }
+
+        .settings-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .setting-item label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        input, select {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 2px solid var(--border);
+            padding: 10px 12px;
+            border-radius: 10px;
+            width: 100%;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .btn {
+            border: none;
+            padding: 16px 24px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(124, 154, 146, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            padding: 16px;
+            width: 56px;
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 32px 24px;
+            }
+
+            .visual-box {
+                width: 200px;
+                height: 200px;
+            }
+
+            .breath-circle {
+                width: 100px;
+                height: 100px;
+            }
+
+            .timer-display {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="dark-mode">
+
+<div class="container">
+    <div class="header">
+        <h1>🧘 Zen Breath</h1>
+        <button class="theme-toggle" onclick="toggleTheme()">
+            <span id="themeIcon">☀️</span>
+        </button>
+    </div>
+
+    <div class="visual-box">
+        <svg>
+            <circle class="progress-bg" cx="120" cy="120" r="108"></circle>
+            <circle id="progressBar" class="progress-bar" cx="120" cy="120" r="108"></circle>
+        </svg>
+        <div id="visual" class="breath-circle">
+            <div class="breath-icon" id="breathIcon">⬆️</div>
+            <div class="breath-text" id="breathText">Ready</div>
+        </div>
+    </div>
+
+    <div class="timer-section">
+        <div class="status-text" id="statusText">READY TO BEGIN</div>
+        <div class="timer-display" id="timer">05:00</div>
+    </div>
+
+    <div class="presets">
+        <button class="preset-btn" onclick="setPreset(2)">2 min</button>
+        <button class="preset-btn active" onclick="setPreset(5)">5 min</button>
+        <button class="preset-btn" onclick="setPreset(10)">10 min</button>
+        <button class="preset-btn" onclick="setPreset(20)">20 min</button>
+    </div>
+
+    <div class="settings-section">
+        <div class="settings-title">Settings</div>
+        <div class="settings-grid">
+            <div class="setting-item">
+                <label>Bell Interval</label>
+                <select id="intervalInput">
+                    <option value="0">No bells</option>
+                    <option value="1" selected>Every 1 min</option>
+                    <option value="2">Every 2 min</option>
+                    <option value="5">Every 5 min</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <label>Bell Sound</label>
+                <select id="bellSoundSelect">
+                    <option value="bell1" selected>Tibetan Bowl</option>
+                    <option value="bell2">Meditation Bell</option>
+                    <option value="bell3">Wind Chime</option>
+                    <option value="bell4">Soft Gong</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <label>Ambient Sound</label>
+                <select id="ambientSelect">
+                    <option value="none">None</option>
+                    <option value="rain">Rain</option>
+                    <option value="ocean">Ocean Waves</option>
+                    <option value="birds">Forest Birds</option>
+                    <option value="wind">Wind</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <label>Ambient Volume</label>
+                <input type="range" id="volumeSlider" min="0" max="100" value="30" style="width: 100%;">
+            </div>
+        </div>
+    </div>
+
+    <div class="control-buttons">
+        <button class="btn btn-primary" id="startBtn">Start Session</button>
+        <button class="btn btn-secondary" id="resetBtn" onclick="resetSession()">↻</button>
+    </div>
+
+    <div class="stats">
+        <div class="stat-item">
+            <span class="stat-value" id="cyclesCount">0</span>
+            <span class="stat-label">Cycles</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-value" id="breathsCount">0</span>
+            <span class="stat-label">Breaths</span>
+        </div>
+    </div>
+</div>
+
+<audio id="bell1" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
+<audio id="bell2" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+<audio id="bell3" src="https://assets.mixkit.co/active_storage/sfx/1723/1723-preview.mp3"></audio>
+<audio id="bell4" src="https://assets.mixkit.co/active_storage/sfx/2570/2570-preview.mp3"></audio>
+<audio id="rain" loop src="https://assets.mixkit.co/active_storage/sfx/2471/2471-preview.mp3"></audio>
+<audio id="ocean" loop src="https://assets.mixkit.co/active_storage/sfx/2487/2487-preview.mp3"></audio>
+<audio id="birds" loop src="https://assets.mixkit.co/active_storage/sfx/2477/2477-preview.mp3"></audio>
+<audio id="wind" loop src="https://assets.mixkit.co/active_storage/sfx/2476/2476-preview.mp3"></audio>
+
+<script>
+    let totalSeconds, timeLeft, timerId, boxId, step = 0;
+    let cycles = 0, breaths = 0;
+    const progressBar = document.getElementById('progressBar');
+    const startBtn = document.getElementById('startBtn');
+    const ambientSelect = document.getElementById('ambientSelect');
+    const volumeSlider = document.getElementById('volumeSlider');
+    const visual = document.getElementById('visual');
+    const breathText = document.getElementById('breathText');
+    const breathIcon = document.getElementById('breathIcon');
+    const statusText = document.getElementById('statusText');
+
+    // Volume control
+    volumeSlider.addEventListener('input', function() {
+        updateAmbientVolume();
+    });
+
+    function updateAmbientVolume() {
+        const volume = volumeSlider.value / 100;
+        ['rain', 'ocean', 'birds', 'wind'].forEach(id => {
+            const audio = document.getElementById(id);
+            if (audio) audio.volume = volume;
+        });
+    }
+
+    function playBell() {
+        const bellSound = document.getElementById('bellSoundSelect').value;
+        const bell = document.getElementById(bellSound);
+        if (bell) {
+            bell.currentTime = 0;
+            bell.play();
+        }
+    }
+
+    // Theme Management
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        const icon = document.getElementById('themeIcon');
+        icon.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+        localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+    }
+
+    // Load saved theme
+    if (localStorage.getItem('theme') === 'light') {
+        document.body.classList.remove('dark-mode');
+        document.getElementById('themeIcon').textContent = '🌙';
+    } else {
+        // Default to dark mode
+        localStorage.setItem('theme', 'dark');
+    }
+
+    function setPreset(mins) {
+        document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        document.getElementById('timer').textContent = `${mins.toString().padStart(2, '0')}:00`;
+        timeLeft = mins * 60;
+        totalSeconds = timeLeft;
+        updateProgress(0);
+    }
+
+    function updateProgress(percent) {
+        const offset = 678 - (percent * 678);
+        progressBar.style.strokeDashoffset = offset;
+    }
+
+    function runBox() {
+        const stages = [
+            { class: 'breath-circle inhale active', txt: 'Inhale', icon: '⬆️', status: 'BREATHING IN' },
+            { class: 'breath-circle hold-full active', txt: 'Hold', icon: '⏸️', status: 'HOLDING' },
+            { class: 'breath-circle exhale active', txt: 'Exhale', icon: '⬇️', status: 'BREATHING OUT' },
+            { class: 'breath-circle hold-empty active', txt: 'Hold', icon: '⏸️', status: 'HOLDING' }
+        ];
+        
+        visual.className = stages[step].class;
+        breathText.textContent = stages[step].txt;
+        breathIcon.textContent = stages[step].icon;
+        statusText.textContent = stages[step].status;
+        
+        if (step === 0) breaths++;
+        if (step === 0 && breaths > 0 && breaths % 4 === 0) cycles++;
+        
+        document.getElementById('breathsCount').textContent = breaths;
+        document.getElementById('cyclesCount').textContent = cycles;
+        
+        step = (step + 1) % 4;
+    }
+
+    startBtn.addEventListener('click', function() {
+        if (timerId) {
+            pauseSession();
+            return;
+        }
+
+        if (!timeLeft) setPreset(5);
+        if (!totalSeconds) totalSeconds = timeLeft;
+
+        this.textContent = "Pause";
+        
+        const ambientValue = ambientSelect.value;
+        if (ambientValue !== 'none') {
+            const ambient = document.getElementById(ambientValue);
+            if (ambient) {
+                updateAmbientVolume();
+                ambient.play();
+            }
+        }
+
+        runBox();
+        boxId = setInterval(runBox, 4000);
+        timerId = setInterval(() => {
+            timeLeft--;
+            
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            document.getElementById('timer').textContent = 
+                `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+            updateProgress((totalSeconds - timeLeft) / totalSeconds);
+
+            const interval = parseInt(document.getElementById('intervalInput').value) * 60;
+            if (interval > 0 && timeLeft > 0 && timeLeft % interval === 0) {
+                playBell();
+            }
+
+            if (timeLeft <= 0) {
+                playBell();
+                setTimeout(() => {
+                    resetSession();
+                    statusText.textContent = '✨ SESSION COMPLETE';
+                    breathText.textContent = 'Namaste';
+                    breathIcon.textContent = '🙏';
+                }, 100);
+            }
+        }, 1000);
+    });
+
+    function pauseSession() {
+        clearInterval(timerId);
+        clearInterval(boxId);
+        timerId = null;
+        startBtn.textContent = "Resume";
+        statusText.textContent = 'PAUSED';
+        ['rain', 'ocean', 'birds', 'wind'].forEach(id => {
+            const audio = document.getElementById(id);
+            if (audio) audio.pause();
+        });
+    }
+
+    function resetSession() {
+        clearInterval(timerId);
+        clearInterval(boxId);
+        timerId = null;
+        
+        ['rain', 'ocean', 'birds', 'wind'].forEach(id => {
+            const audio = document.getElementById(id);
+            if (audio) audio.pause();
+        });
+        
+        timeLeft = null;
+        totalSeconds = null;
+        step = 0;
+        cycles = 0;
+        breaths = 0;
+        
+        updateProgress(0);
+        visual.className = 'breath-circle';
+        breathText.textContent = 'Ready';
+        breathIcon.textContent = '⬆️';
+        statusText.textContent = 'READY TO BEGIN';
+        startBtn.textContent = "Start Session";
+        
+        document.getElementById('breathsCount').textContent = '0';
+        document.getElementById('cyclesCount').textContent = '0';
+        
+        document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.preset-btn')[1].classList.add('active');
+        setPreset(5);
+    }
+</script>
+</body>
+</html>
