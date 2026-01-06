@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circadian Rhythm Widget</title>
+    <style>
+        :root {
+            --bg-gradient-start: #667eea;
+            --bg-gradient-end: #764ba2;
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+            --card-bg: #ffffff;
+            --accent-color: #667eea;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --border-radius: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .widget-container {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            width: 100%;
+            max-width: 400px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .widget-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--bg-gradient-start), var(--bg-gradient-end));
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+        }
+
+        /* Setup View */
+        #setup-view {
+            text-align: center;
+        }
+
+        .wake-icon {
+            font-size: 4rem;
+            margin: 20px 0;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .start-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Active View */
+        #active-view {
+            display: none;
+        }
+
+        .phase-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .phase-icon {
+            font-size: 3.5rem;
+            margin-bottom: 10px;
+            display: inline-block;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .phase-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .phase-desc {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin: 25px 0;
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            border-radius: 10px;
+            transition: width 0.5s ease;
+            position: relative;
+        }
+
+        .progress-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+
+        /* Timeline */
+        .timeline {
+            margin: 25px 0;
+        }
+
+        .timeline-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            position: relative;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 16px;
+            top: 35px;
+            bottom: -10px;
+            width: 2px;
+            background: #e2e8f0;
+        }
+
+        .timeline-item:last-child::before {
+            display: none;
+        }
+
+        .timeline-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #cbd5e0;
+            margin-right: 15px;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .timeline-item.active .timeline-dot {
+            background: var(--accent-color);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+            animation: ping 2s ease-in-out infinite;
+        }
+
+        @keyframes ping {
+            0%, 100% { box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2); }
+            50% { box-shadow: 0 0 0 8px rgba(102, 126, 234, 0.1); }
+        }
+
+        .timeline-item.completed .timeline-dot {
+            background: #48bb78;
+        }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        .timeline-phase {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .timeline-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f7fafc;
+            color: var(--text-secondary);
+        }
+
+        .btn-secondary:hover {
+            background: #edf2f7;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .widget-container {
+                padding: 25px 20px;
+            }
+            
+            h2 {
+                font-size: 1.3rem;
+            }
+            
+            .phase-icon {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="widget-container">
+    <!-- Setup View -->
+    <div id="setup-view">
+        <h2>Circadian Rhythm Tracker</h2>
+        <p class="subtitle">Optimize your day based on your natural energy cycles</p>
+        <div class="wake-icon">☀️</div>
+        <button class="start-btn" onclick="startDay()">
+            <span>🌅 I'm Awake</span>
+        </button>
+    </div>
+
+    <!-- Active View -->
+    <div id="active-view">
+        <div class="phase-header">
+            <div class="phase-icon" id="phase-icon">⏰</div>
+            <div class="phase-title" id="phase-title">Loading...</div>
+            <div class="phase-desc" id="phase-desc"></div>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-label">
+                <span id="progress-text">Current Phase</span>
+                <span id="progress-time">0h 0m remaining</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progress-bar" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-value" id="hours-awake">0h</span>
+                <span class="stat-label">Hours Awake</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="phase-number">1/6</span>
+                <span class="stat-label">Phase</span>
+            </div>
+        </div>
+
+        <div class="timeline">
+            <div class="timeline-title">Today's Phases</div>
+            <div id="timeline-container"></div>
+        </div>
+
+        <div class="button-group">
+            <button class="btn btn-secondary" onclick="resetDay()">🔄 Reset</button>
+            <button class="btn btn-primary" onclick="showStats()">📊 Stats</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const phases = [
+        {
+            id: 'rampup',
+            icon: '☕',
+            title: 'Ramp Up',
+            desc: 'Light admin, planning & coffee',
+            duration: 2,
+            startHour: 0
+        },
+        {
+            id: 'deepwork',
+            icon: '🧠',
+            title: 'Deep Work',
+            desc: 'Peak focus - tackle your hardest tasks',
+            duration: 4,
+            startHour: 2
+        },
+        {
+            id: 'transition',
+            icon: '🥪',
+            title: 'Lunch Break',
+            desc: 'Refuel & recharge with movement',
+            duration: 1,
+            startHour: 6
+        },
+        {
+            id: 'slump',
+            icon: '📉',
+            title: 'The Slump',
+            desc: 'Shallow work, emails & meetings',
+            duration: 2,
+            startHour: 7
+        },
+        {
+            id: 'rebound',
+            icon: '🎨',
+            title: 'Creative Rebound',
+            desc: 'Brainstorming & big-picture thinking',
+            duration: 3,
+            startHour: 9
+        },
+        {
+            id: 'winddown',
+            icon: '🌙',
+            title: 'Wind Down',
+            desc: 'Disconnect & prepare for rest',
+            duration: 12,
+            startHour: 12
+        }
+    ];
+
+    let wakeTime = localStorage.getItem('circadianWakeTime');
+
+    function startDay() {
+        wakeTime = new Date().getTime();
+        localStorage.setItem('circadianWakeTime', wakeTime);
+        updateUI();
+    }
+
+    function resetDay() {
+        if(confirm("Reset your wake-up time and start fresh?")) {
+            localStorage.removeItem('circadianWakeTime');
+            wakeTime = null;
+            updateUI();
+        }
+    }
+
+    function showStats() {
+        const hoursSinceWake = getHoursSinceWake();
+        const currentPhase = getCurrentPhase();
+        alert(`📊 Daily Stats\n\n⏰ Hours Awake: ${Math.floor(hoursSinceWake)}h ${Math.floor((hoursSinceWake % 1) * 60)}m\n🎯 Current Phase: ${currentPhase.title}\n✨ Keep optimizing your energy!`);
+    }
+
+    function updateUI() {
+        if (wakeTime) {
+            document.getElementById('setup-view').style.display = 'none';
+            document.getElementById('active-view').style.display = 'block';
+            renderTimeline();
+            updatePhase();
+        } else {
+            document.getElementById('setup-view').style.display = 'block';
+            document.getElementById('active-view').style.display = 'none';
+        }
+    }
+
+    function getHoursSinceWake() {
+        if (!wakeTime) return 0;
+        const now = new Date().getTime();
+        const diffInSeconds = (now - wakeTime) / 1000;
+        return diffInSeconds / 3600;
+    }
+
+    function getCurrentPhase() {
+        const hoursSinceWake = getHoursSinceWake();
+        
+        for (let i = 0; i < phases.length; i++) {
+            const phase = phases[i];
+            const nextPhase = phases[i + 1];
+            const endHour = nextPhase ? nextPhase.startHour : 24;
+            
+            if (hoursSinceWake >= phase.startHour && hoursSinceWake < endHour) {
+                return {
+                    ...phase,
+                    endHour,
+                    index: i
+                };
+            }
+        }
+        
+        return phases[phases.length - 1];
+    }
+
+    function updatePhase() {
+        if (!wakeTime) return;
+
+        const hoursSinceWake = getHoursSinceWake();
+        const currentPhase = getCurrentPhase();
+
+        // Update phase info
+        document.getElementById('phase-icon').innerText = currentPhase.icon;
+        document.getElementById('phase-title').innerText = currentPhase.title;
+        document.getElementById('phase-desc').innerText = currentPhase.desc;
+
+        // Update stats
+        const hours = Math.floor(hoursSinceWake);
+        const minutes = Math.floor((hoursSinceWake % 1) * 60);
+        document.getElementById('hours-awake').innerText = `${hours}h ${minutes}m`;
+        document.getElementById('phase-number').innerText = `${currentPhase.index + 1}/${phases.length}`;
+
+        // Update progress bar
+        const phaseProgress = (hoursSinceWake - currentPhase.startHour) / (currentPhase.endHour - currentPhase.startHour);
+        const progressPercent = Math.min(100, Math.max(0, phaseProgress * 100));
+        document.getElementById('progress-bar').style.width = progressPercent + '%';
+
+        // Update progress time
+        const remainingSeconds = (currentPhase.endHour - hoursSinceWake) * 3600;
+        if (remainingSeconds > 0) {
+            const h = Math.floor(remainingSeconds / 3600);
+            const m = Math.floor((remainingSeconds % 3600) / 60);
+            document.getElementById('progress-time').innerText = `${h}h ${m}m remaining`;
+        } else {
+            document.getElementById('progress-time').innerText = 'Phase complete';
+        }
+
+        // Update timeline
+        updateTimelineStatus();
+    }
+
+    function renderTimeline() {
+        const wakeDate = new Date(parseInt(wakeTime));
+        const container = document.getElementById('timeline-container');
+        container.innerHTML = '';
+
+        phases.forEach((phase, index) => {
+            const phaseTime = new Date(wakeDate.getTime() + phase.startHour * 3600000);
+            const timeStr = phaseTime.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit',
+                hour12: true 
+            });
+
+            const item = document.createElement('div');
+            item.className = 'timeline-item';
+            item.id = `timeline-${phase.id}`;
+            item.innerHTML = `
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <div class="timeline-phase">${phase.icon} ${phase.title}</div>
+                    <div class="timeline-time">${timeStr}</div>
+                </div>
+            `;
+            container.appendChild(item);
+        });
+    }
+
+    function updateTimelineStatus() {
+        const hoursSinceWake = getHoursSinceWake();
+        
+        phases.forEach((phase, index) => {
+            const item = document.getElementById(`timeline-${phase.id}`);
+            if (!item) return;
+
+            const nextPhase = phases[index + 1];
+            const endHour = nextPhase ? nextPhase.startHour : 24;
+
+            item.classList.remove('active', 'completed');
+            
+            if (hoursSinceWake >= phase.startHour && hoursSinceWake < endHour) {
+                item.classList.add('active');
+            } else if (hoursSinceWake >= endHour) {
+                item.classList.add('completed');
+            }
+        });
+    }
+
+    // Update every 30 seconds
+    setInterval(updatePhase, 30000);
+    
+    // Initial render
+    updateUI();
+</script>
+
+</body>
+</html>
