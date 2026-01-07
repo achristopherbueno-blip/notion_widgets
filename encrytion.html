@@ -19,7 +19,7 @@
         
         body { 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; 
-            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%);
+            background: transparent;
             color: #fff; 
             display: flex; 
             justify-content: center; 
@@ -56,6 +56,7 @@
             align-items: center;
             justify-content: center;
             font-size: 20px;
+            color: white;
         }
         
         h2 { 
@@ -155,7 +156,7 @@
             position: absolute; 
             background: none; 
             border: none;
-            color: var(--text-dim); 
+            color: white;
             cursor: pointer; 
             padding: 8px;
             font-size: 1.1rem;
@@ -271,6 +272,7 @@
         .info-icon {
             font-size: 1.2rem;
             flex-shrink: 0;
+            color: white;
         }
         
         .info-text {
@@ -480,7 +482,12 @@
 
 <div class="container">
     <div class="header">
-        <div class="icon">🔐</div>
+        <div class="icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+        </div>
         <h2>Secure Cipher</h2>
     </div>
     
@@ -493,7 +500,12 @@
         <label>Passphrase</label>
         <div class="pass-wrapper">
             <input type="password" id="pw" placeholder="Enter a strong passphrase..." autocomplete="off">
-            <button type="button" class="toggle-btn" id="togglePw" title="Toggle visibility">👁️</button>
+            <button type="button" class="toggle-btn" id="togglePw" title="Toggle visibility">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="eyeIcon">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                </svg>
+            </button>
         </div>
         <div class="strength-meter" id="strengthMeter">
             <div class="strength-bar">
@@ -508,13 +520,26 @@
             <span class="result-label">Result</span>
             <div class="action-buttons">
                 <button class="icon-btn" id="advancedToggleBtn" onclick="toggleAdvanced()" title="Advanced options">
-                    <span id="advancedIcon">⚙️</span>
+                    <span id="advancedIcon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M12 1v6m0 6v6m5.196-15.196L13.5 7.5m-3 3l-3.696 3.696M23 12h-6m-6 0H1m15.196 5.196L13.5 13.5m-3-3l-3.696-3.696"/>
+                        </svg>
+                    </span>
                 </button>
                 <button class="icon-btn" id="copyBtn" onclick="copyResult()" title="Copy to clipboard">
-                    <span id="copyIcon">📋</span> Copy
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                    </svg>
+                    Copy
                 </button>
                 <button class="icon-btn" id="clearBtn" onclick="clearAll()" title="Clear all fields">
-                    🗑️ Clear
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                    Clear
                 </button>
             </div>
         </div>
@@ -542,9 +567,9 @@
             <div class="input-group">
                 <label>
                     Max Visible Characters
-                    <span style="color: var(--text-dim); font-weight: normal; text-transform: none; margin-left: 8px;">(full text preserved for copy)</span>
+                    <span style="color: var(--text-dim); font-weight: normal; text-transform: none; margin-left: 8px;">(default 15, up to 1 million)</span>
                 </label>
-                <input type="number" id="maxChars" placeholder="15" min="1" max="15" step="1" value="15">
+                <input type="number" id="maxChars" placeholder="15" min="1" max="1000000" step="1" value="15">
             </div>
             
             <div class="input-group">
@@ -572,7 +597,13 @@
     </div>
     
     <div class="info-panel">
-        <div class="info-icon">ℹ️</div>
+        <div class="info-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+        </div>
         <div class="info-text">
             <strong>AES-256-GCM encryption</strong> with PBKDF2 key derivation (100,000 rounds).
             Your data never leaves your browser.
@@ -590,11 +621,12 @@
     const strengthLabel = document.getElementById('strengthLabel');
     const charCount = document.getElementById('charCount');
     const maxCharsInput = document.getElementById('maxChars');
+    const eyeIcon = document.getElementById('eyeIcon');
     
     let isEncryptMode = true;
     let outputFormat = 'base64';
-    let maxChars = 15; // Default limit
-    let fullOutput = ''; // Store the complete output
+    let maxChars = 15;
+    let fullOutput = '';
 
     // Toggle Advanced Options
     function toggleAdvanced() {
@@ -606,25 +638,43 @@
         content.style.display = isOpen ? 'none' : 'block';
         
         if (isOpen) {
-            icon.textContent = '⚙️';
+            icon.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12 1v6m0 6v6m5.196-15.196L13.5 7.5m-3 3l-3.696 3.696M23 12h-6m-6 0H1m15.196 5.196L13.5 13.5m-3-3l-3.696-3.696"/>
+                </svg>
+            `;
             btn.classList.remove('active');
         } else {
-            icon.textContent = '✕';
+            icon.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            `;
             btn.classList.add('active');
         }
     }
 
     // Update Character Type Checks
     function updateCharacterChecks() {
-        if (!fullOutput || outDiv.classList.contains('empty')) {
+        const password = pwInput.value;
+        
+        // Hide checks if no output, empty output, or no passphrase
+        if (!fullOutput || outDiv.classList.contains('empty') || !password) {
+            document.getElementById('characterChecks').style.display = 'none';
+            return;
+        }
+
+        const displayedText = outDiv.innerText;
+        
+        // Only show checks if there's actual content
+        if (!displayedText || displayedText === 'Enter a message and passphrase to begin...' || displayedText === 'Enter both message and passphrase...') {
             document.getElementById('characterChecks').style.display = 'none';
             return;
         }
 
         document.getElementById('characterChecks').style.display = 'grid';
-
-        // Check only the displayed portion
-        const displayedText = outDiv.innerText;
         
         const hasUppercase = /[A-Z]/.test(displayedText);
         const hasLowercase = /[a-z]/.test(displayedText);
@@ -642,64 +692,51 @@
         checkSpecial.className = hasSpecial ? 'check-item active' : 'check-item inactive';
     }
 
-    // Deterministic character replacement to ensure all character types are present
     function ensureAllCharacterTypes(text, maxLength, originalMessage, passphrase) {
-        // Only work with the portion that will be displayed
         const displayLength = Math.min(maxLength, text.length);
         let displayPortion = text.substring(0, displayLength);
         const remainingPortion = text.substring(displayLength);
         
-        // Check what's missing in the display portion only
         const hasUppercase = /[A-Z]/.test(displayPortion);
         const hasLowercase = /[a-z]/.test(displayPortion);
         const hasNumbers = /[0-9]/.test(displayPortion);
         const hasSpecial = /[^A-Za-z0-9]/.test(displayPortion);
 
-        // If all types are present, return original
         if (hasUppercase && hasLowercase && hasNumbers && hasSpecial) {
             return text;
         }
 
-        // Create a deterministic seed from: original message + passphrase + maxLength + display portion
-        // This ensures same inputs always produce same output
         const seedString = originalMessage + passphrase + maxLength.toString() + displayPortion;
         let seed = 0;
         for (let i = 0; i < seedString.length; i++) {
             seed = ((seed << 5) - seed) + seedString.charCodeAt(i);
-            seed = seed & seed; // Convert to 32bit integer
+            seed = seed & seed;
         }
 
-        // Deterministic random function based on seed
         function seededRandom() {
             seed = (seed * 9301 + 49297) % 233280;
             return seed / 233280;
         }
 
-        // Character pools for replacement
         const uppercaseChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         const lowercaseChars = 'abcdefghijklmnopqrstuvwxyz';
         const numberChars = '0123456789';
         const specialChars = '!@#$%&*';
 
-        // Convert display portion to array for manipulation
         let chars = displayPortion.split('');
         
-        // Build list of required replacements
         const replacementsNeeded = [];
         if (!hasUppercase) replacementsNeeded.push({ type: 'upper', pool: uppercaseChars });
         if (!hasLowercase) replacementsNeeded.push({ type: 'lower', pool: lowercaseChars });
         if (!hasNumbers) replacementsNeeded.push({ type: 'number', pool: numberChars });
         if (!hasSpecial) replacementsNeeded.push({ type: 'special', pool: specialChars });
 
-        // Track used positions to avoid overwriting
         const usedPositions = new Set();
 
-        // Replace characters deterministically - one for each missing type
         for (const replacement of replacementsNeeded) {
             let position;
             let attempts = 0;
             
-            // Find an unused position deterministically
             do {
                 position = Math.floor(seededRandom() * chars.length);
                 attempts++;
@@ -707,16 +744,13 @@
             
             usedPositions.add(position);
             
-            // Select character from pool deterministically
             const charIndex = Math.floor(seededRandom() * replacement.pool.length);
             chars[position] = replacement.pool[charIndex];
         }
 
-        // Combine modified display portion with unmodified remainder
         return chars.join('') + remainingPortion;
     }
 
-    // Set Output Format
     function setFormat(format) {
         outputFormat = format;
         document.querySelectorAll('.format-btn').forEach(btn => {
@@ -725,31 +759,48 @@
         update();
     }
 
-    // Toggle Passphrase Visibility
     document.getElementById('togglePw').addEventListener('click', function() {
         const isHidden = pwInput.type === 'password';
         pwInput.type = isHidden ? 'text' : 'password';
-        this.textContent = isHidden ? '🔒' : '👁️';
+        
+        if (isHidden) {
+            eyeIcon.innerHTML = `
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+            `;
+        } else {
+            eyeIcon.innerHTML = `
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+            `;
+        }
     });
 
-    // Copy Result
     function copyResult() {
-        const text = fullOutput || outDiv.innerText;
+        const text = outDiv.innerText;
         if (text && !outDiv.classList.contains('empty')) {
             navigator.clipboard.writeText(text).then(() => {
                 const btn = document.getElementById('copyBtn');
-                const icon = document.getElementById('copyIcon');
+                const copyIconSpan = btn.querySelector('svg').parentElement;
                 btn.classList.add('success');
-                icon.textContent = '✅';
+                copyIconSpan.innerHTML = `
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                `;
                 setTimeout(() => {
                     btn.classList.remove('success');
-                    icon.textContent = '📋';
+                    copyIconSpan.innerHTML = `
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                        </svg>
+                    `;
                 }, 1500);
             });
         }
     }
 
-    // Clear All Fields
     function clearAll() {
         msgInput.value = '';
         pwInput.value = '';
@@ -758,9 +809,9 @@
         strengthMeter.style.display = 'none';
         charCount.textContent = '';
         fullOutput = '';
+        document.getElementById('characterChecks').style.display = 'none';
     }
 
-    // Check Passphrase Strength
     function checkPassphraseStrength(password) {
         if (!password) {
             strengthMeter.style.display = 'none';
@@ -806,7 +857,6 @@
         strengthLabel.style.color = color;
     }
 
-    // Encoding Helper Functions
     function arrayBufferToBase64(buffer) {
         const bytes = new Uint8Array(buffer);
         const binary = String.fromCharCode(...bytes);
@@ -935,7 +985,6 @@
         }
     }
 
-    // Derive Key using PBKDF2
     async function deriveKey(password, salt) {
         const enc = new TextEncoder();
         const keyMaterial = await crypto.subtle.importKey(
@@ -960,27 +1009,22 @@
         );
     }
 
-    // Generate deterministic salt and IV from password and text
     async function generateDeterministicSaltAndIV(password, text) {
         const enc = new TextEncoder();
         const data = enc.encode(password + text);
         
-        // Generate hash
         const hashBuffer = await crypto.subtle.digest('SHA-256', data);
         const hashArray = new Uint8Array(hashBuffer);
         
-        // Use first 16 bytes for salt, next 12 bytes for IV
         const salt = hashArray.slice(0, 16);
         const iv = hashArray.slice(16, 28);
         
         return { salt, iv };
     }
 
-    // Encrypt using AES-GCM
     async function encryptText(text, password, format) {
         const enc = new TextEncoder();
         
-        // Generate deterministic salt and IV
         const { salt, iv } = await generateDeterministicSaltAndIV(password, text);
         
         const key = await deriveKey(password, salt);
@@ -999,7 +1043,6 @@
         return await encodeOutput(combined, format);
     }
 
-    // Decrypt using AES-GCM
     async function decryptText(encryptedData, password, format) {
         const data = await decodeInput(encryptedData, format);
         const salt = data.slice(0, 16);
@@ -1017,7 +1060,6 @@
         return new TextDecoder().decode(decrypted);
     }
 
-    // Main Update Function (generates the output)
     async function update() {
         const text = msgInput.value;
         const password = pwInput.value;
@@ -1035,12 +1077,12 @@
         try {
             if (isEncryptMode) {
                 const encrypted = await encryptText(text, password, outputFormat);
-                fullOutput = encrypted; // Store complete output
+                fullOutput = encrypted;
             } else {
                 const decrypted = await decryptText(text, password, outputFormat);
-                fullOutput = decrypted; // Store complete output
+                fullOutput = decrypted;
             }
-            updateDisplay(); // Update what's shown
+            updateDisplay();
         } catch(e) {
             outDiv.innerText = '❌ Error: Invalid ciphertext or incorrect passphrase';
             outDiv.style.color = 'var(--error)';
@@ -1052,7 +1094,6 @@
         }
     }
 
-    // Update Display (handles showing/hiding characters based on limit)
     function updateDisplay() {
         if (!fullOutput) {
             outDiv.innerText = 'Enter a message and passphrase to begin...';
@@ -1064,17 +1105,15 @@
         outDiv.classList.remove('empty');
         const originalLength = msgInput.value.length;
         
-        // Apply character type enforcement with all relevant inputs for deterministic result
         const modifiedOutput = ensureAllCharacterTypes(
             fullOutput, 
             maxChars, 
-            msgInput.value,  // original message
-            pwInput.value    // passphrase
+            msgInput.value,
+            pwInput.value
         );
         let displayOutput = modifiedOutput;
         let isHidden = false;
 
-        // Apply visual limit if set (but keep full output stored)
         if (maxChars && modifiedOutput.length > maxChars) {
             displayOutput = modifiedOutput.substring(0, maxChars);
             isHidden = true;
@@ -1082,27 +1121,24 @@
 
         outDiv.innerText = displayOutput;
         
-        // Update character count
         if (isEncryptMode) {
             const ratio = ((fullOutput.length / originalLength) * 100).toFixed(0);
             if (isHidden) {
-                charCount.textContent = `Showing ${maxChars} of ${fullOutput.length} characters (full text copied)`;
+                charCount.textContent = `Showing ${maxChars} of ${fullOutput.length} characters`;
             } else {
                 charCount.textContent = `${fullOutput.length} characters (${ratio}% of original)`;
             }
         } else {
             if (isHidden) {
-                charCount.textContent = `Showing ${maxChars} of ${fullOutput.length} characters (full text copied)`;
+                charCount.textContent = `Showing ${maxChars} of ${fullOutput.length} characters`;
             } else {
                 charCount.textContent = `${fullOutput.length} characters`;
             }
         }
         
-        // Update character type checks
         updateCharacterChecks();
     }
 
-    // Event Listeners
     msgInput.addEventListener('input', update);
     pwInput.addEventListener('input', (e) => {
         checkPassphraseStrength(e.target.value);
@@ -1112,22 +1148,19 @@
     maxCharsInput.addEventListener('input', (e) => {
         let value = parseInt(e.target.value);
         
-        // Enforce max limit of 15
-        if (value > 15) {
-            value = 15;
-            e.target.value = 15;
+        if (value > 1000000) {
+            value = 1000000;
+            e.target.value = 1000000;
         }
         
         maxChars = isNaN(value) || value <= 0 ? 15 : value;
         updateDisplay();
     });
     
-    // Initialize default value on load
     window.addEventListener('DOMContentLoaded', () => {
         maxCharsInput.value = maxChars;
     });
 
-    // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
         if (e.ctrlKey || e.metaKey) {
             if (e.key === 'k') {
