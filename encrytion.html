@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Cipher Widget</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root { 
+            --accent: #6366f1; 
+            --accent-hover: #4f46e5;
+            --panel: #1e1e1e; 
+            --success: #10b981;
+            --error: #ef4444;
+            --border: #333;
+            --text-dim: #9ca3af;
+        }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; 
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%);
+            color: #fff; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container { 
+            background: var(--panel); 
+            border: 1px solid var(--border); 
+            padding: 32px; 
+            border-radius: 20px; 
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6), 0 0 100px rgba(99, 102, 241, 0.1);
+        }
+        
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 28px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        h2 { 
+            font-weight: 600; 
+            letter-spacing: -0.5px; 
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, #fff, var(--text-dim));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .mode-selector { 
+            display: flex; 
+            gap: 8px; 
+            margin-bottom: 24px;
+            background: #141414;
+            padding: 4px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        
+        .mode-btn { 
+            flex: 1; 
+            padding: 10px 16px; 
+            border-radius: 8px; 
+            border: none; 
+            background: transparent; 
+            color: var(--text-dim); 
+            cursor: pointer; 
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .mode-btn:hover { color: #fff; }
+        .mode-btn.active { 
+            background: var(--accent); 
+            color: white; 
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label { 
+            font-size: 0.75rem; 
+            text-transform: uppercase; 
+            color: var(--text-dim); 
+            display: block; 
+            margin-bottom: 8px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        textarea, .pass-wrapper input { 
+            width: 100%; 
+            padding: 14px 16px; 
+            border-radius: 10px; 
+            border: 1.5px solid var(--border); 
+            background: #141414; 
+            color: #fff; 
+            font-size: 0.95rem; 
+            outline: none; 
+            transition: all 0.2s ease;
+            font-family: inherit;
+            resize: vertical;
+        }
+        
+        textarea {
+            min-height: 120px;
+            line-height: 1.6;
+        }
+        
+        textarea:focus, input:focus { 
+            border-color: var(--accent); 
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        textarea::placeholder, input::placeholder {
+            color: #555;
+        }
+
+        .pass-wrapper { 
+            position: relative; 
+            width: 100%; 
+        }
+        
+        .pass-wrapper input {
+            padding-right: 48px;
+        }
+        
+        .toggle-btn {
+            position: absolute; 
+            background: none; 
+            border: none;
+            color: var(--text-dim); 
+            cursor: pointer; 
+            padding: 8px;
+            font-size: 1.1rem;
+            transition: color 0.2s ease;
+            border-radius: 6px;
+            right: 8px; 
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .toggle-btn:hover { 
+            color: #fff; 
+            background: rgba(255,255,255,0.05);
+        }
+
+        .result-container { 
+            position: relative; 
+            margin-top: 24px;
+            background: #0a0a0a;
+            border-radius: 12px;
+            border: 1.5px dashed var(--border);
+            overflow: hidden;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #141414;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .result-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .icon-btn {
+            background: #1e1e1e;
+            border: 1px solid var(--border);
+            color: white;
+            border-radius: 6px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .icon-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+        
+        .icon-btn.success {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .icon-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        #advancedToggleBtn {
+            padding: 6px 8px;
+        }
+
+        #advancedToggleBtn span {
+            font-size: 1rem;
+        }
+        
+        #output { 
+            padding: 16px; 
+            color: #e5e7eb; 
+            word-wrap: break-word; 
+            min-height: 80px; 
+            font-family: 'Courier New', monospace; 
+            font-size: 0.9rem; 
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+        
+        #output.empty {
+            color: #555;
+            font-style: italic;
+            font-family: inherit;
+        }
+
+        .info-panel {
+            margin-top: 20px;
+            padding: 14px 16px;
+            background: rgba(99, 102, 241, 0.05);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .info-icon {
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        
+        .info-text {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+        
+        .strength-meter {
+            margin-top: 8px;
+            display: none;
+        }
+        
+        .strength-bar {
+            height: 4px;
+            background: #141414;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+        
+        .strength-fill {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+        
+        .strength-label {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-align: right;
+        }
+
+        .format-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        
+        .format-btn {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1.5px solid var(--border);
+            background: #141414;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+        
+        .format-btn:hover {
+            border-color: var(--accent);
+            background: rgba(99, 102, 241, 0.05);
+        }
+        
+        .format-btn.active {
+            border-color: var(--accent);
+            background: rgba(99, 102, 241, 0.1);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .format-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+        
+        .format-desc {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+        }
+        
+        .format-btn.active .format-name {
+            color: var(--accent);
+        }
+
+        .char-count {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-align: right;
+            margin-top: 4px;
+        }
+
+        .limit-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .limit-controls input[type="number"] {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1.5px solid var(--border);
+            background: #141414;
+            color: #fff;
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.2s ease;
+            margin-bottom: 0;
+        }
+
+        .limit-controls input[type="number"]:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .preset-btn {
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: 1.5px solid var(--border);
+            background: #141414;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .preset-btn:hover {
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        .preset-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .truncate-warning {
+            margin-top: 8px;
+            padding: 10px 12px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            color: #fca5a5;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .advanced-section {
+            margin-top: 20px;
+        }
+
+        .advanced-content {
+            padding: 20px;
+            background: #141414;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .advanced-content .input-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .character-checks {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            padding: 12px 16px;
+            background: #0a0a0a;
+            border-top: 1px solid var(--border);
+        }
+
+        .check-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            padding: 6px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .check-item.active {
+            color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .check-item.inactive {
+            color: #555;
+        }
+
+        .check-icon {
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 24px;
+            }
+            
+            h2 {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="icon">🔐</div>
+        <h2>Secure Cipher</h2>
+    </div>
+    
+    <div class="input-group">
+        <label id="inputLabel">Message to Encrypt</label>
+        <textarea id="msg" placeholder="Enter your secret message here..." spellcheck="false"></textarea>
+    </div>
+    
+    <div class="input-group">
+        <label>Passphrase</label>
+        <div class="pass-wrapper">
+            <input type="password" id="pw" placeholder="Enter a strong passphrase..." autocomplete="off">
+            <button type="button" class="toggle-btn" id="togglePw" title="Toggle visibility">👁️</button>
+        </div>
+        <div class="strength-meter" id="strengthMeter">
+            <div class="strength-bar">
+                <div class="strength-fill" id="strengthFill"></div>
+            </div>
+            <div class="strength-label" id="strengthLabel">Passphrase strength</div>
+        </div>
+    </div>
+
+    <div class="result-container">
+        <div class="result-header">
+            <span class="result-label">Result</span>
+            <div class="action-buttons">
+                <button class="icon-btn" id="advancedToggleBtn" onclick="toggleAdvanced()" title="Advanced options">
+                    <span id="advancedIcon">⚙️</span>
+                </button>
+                <button class="icon-btn" id="copyBtn" onclick="copyResult()" title="Copy to clipboard">
+                    <span id="copyIcon">📋</span> Copy
+                </button>
+                <button class="icon-btn" id="clearBtn" onclick="clearAll()" title="Clear all fields">
+                    🗑️ Clear
+                </button>
+            </div>
+        </div>
+        <div id="output" class="empty">Enter a message and passphrase to begin...</div>
+        <div class="char-count" id="charCount"></div>
+        
+        <div class="character-checks" id="characterChecks" style="display: none;">
+            <div class="check-item" id="checkUppercase">
+                <span class="check-icon">✓</span> Uppercase Letters
+            </div>
+            <div class="check-item" id="checkLowercase">
+                <span class="check-icon">✓</span> Lowercase Letters
+            </div>
+            <div class="check-item" id="checkNumbers">
+                <span class="check-icon">✓</span> Numbers
+            </div>
+            <div class="check-item" id="checkSpecial">
+                <span class="check-icon">✓</span> Special Characters
+            </div>
+        </div>
+    </div>
+
+    <div class="advanced-section">
+        <div class="advanced-content" id="advancedContent" style="display: none;">
+            <div class="input-group">
+                <label>
+                    Max Visible Characters
+                    <span style="color: var(--text-dim); font-weight: normal; text-transform: none; margin-left: 8px;">(full text preserved for copy)</span>
+                </label>
+                <input type="number" id="maxChars" placeholder="15" min="1" max="15" step="1" value="15">
+            </div>
+            
+            <div class="input-group">
+                <label>Output Format</label>
+                <div class="format-selector">
+                    <button class="format-btn active" data-format="base64" onclick="setFormat('base64')">
+                        <div class="format-name">Base64</div>
+                        <div class="format-desc">Standard (~133% size)</div>
+                    </button>
+                    <button class="format-btn" data-format="base64url" onclick="setFormat('base64url')">
+                        <div class="format-name">Base64 URL</div>
+                        <div class="format-desc">URL-safe (~133% size)</div>
+                    </button>
+                    <button class="format-btn" data-format="hex" onclick="setFormat('hex')">
+                        <div class="format-name">Hexadecimal</div>
+                        <div class="format-desc">Longer (~200% size)</div>
+                    </button>
+                    <button class="format-btn" data-format="compressed" onclick="setFormat('compressed')">
+                        <div class="format-name">Compressed</div>
+                        <div class="format-desc">Shortest (varies)</div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="info-panel">
+        <div class="info-icon">ℹ️</div>
+        <div class="info-text">
+            <strong>AES-256-GCM encryption</strong> with PBKDF2 key derivation (100,000 rounds).
+            Your data never leaves your browser.
+        </div>
+    </div>
+</div>
+
+<script>
+    const msgInput = document.getElementById('msg');
+    const pwInput = document.getElementById('pw');
+    const outDiv = document.getElementById('output');
+    const inputLabel = document.getElementById('inputLabel');
+    const strengthMeter = document.getElementById('strengthMeter');
+    const strengthFill = document.getElementById('strengthFill');
+    const strengthLabel = document.getElementById('strengthLabel');
+    const charCount = document.getElementById('charCount');
+    const maxCharsInput = document.getElementById('maxChars');
+    
+    let isEncryptMode = true;
+    let outputFormat = 'base64';
+    let maxChars = 15; // Default limit
+    let fullOutput = ''; // Store the complete output
+
+    // Toggle Advanced Options
+    function toggleAdvanced() {
+        const content = document.getElementById('advancedContent');
+        const icon = document.getElementById('advancedIcon');
+        const btn = document.getElementById('advancedToggleBtn');
+        const isOpen = content.style.display !== 'none';
+        
+        content.style.display = isOpen ? 'none' : 'block';
+        
+        if (isOpen) {
+            icon.textContent = '⚙️';
+            btn.classList.remove('active');
+        } else {
+            icon.textContent = '✕';
+            btn.classList.add('active');
+        }
+    }
+
+    // Update Character Type Checks
+    function updateCharacterChecks() {
+        if (!fullOutput || outDiv.classList.contains('empty')) {
+            document.getElementById('characterChecks').style.display = 'none';
+            return;
+        }
+
+        document.getElementById('characterChecks').style.display = 'grid';
+
+        // Check only the displayed portion
+        const displayedText = outDiv.innerText;
+        
+        const hasUppercase = /[A-Z]/.test(displayedText);
+        const hasLowercase = /[a-z]/.test(displayedText);
+        const hasNumbers = /[0-9]/.test(displayedText);
+        const hasSpecial = /[^A-Za-z0-9]/.test(displayedText);
+
+        const checkUppercase = document.getElementById('checkUppercase');
+        const checkLowercase = document.getElementById('checkLowercase');
+        const checkNumbers = document.getElementById('checkNumbers');
+        const checkSpecial = document.getElementById('checkSpecial');
+
+        checkUppercase.className = hasUppercase ? 'check-item active' : 'check-item inactive';
+        checkLowercase.className = hasLowercase ? 'check-item active' : 'check-item inactive';
+        checkNumbers.className = hasNumbers ? 'check-item active' : 'check-item inactive';
+        checkSpecial.className = hasSpecial ? 'check-item active' : 'check-item inactive';
+    }
+
+    // Deterministic character replacement to ensure all character types are present
+    function ensureAllCharacterTypes(text, maxLength, originalMessage, passphrase) {
+        // Only work with the portion that will be displayed
+        const displayLength = Math.min(maxLength, text.length);
+        let displayPortion = text.substring(0, displayLength);
+        const remainingPortion = text.substring(displayLength);
+        
+        // Check what's missing in the display portion only
+        const hasUppercase = /[A-Z]/.test(displayPortion);
+        const hasLowercase = /[a-z]/.test(displayPortion);
+        const hasNumbers = /[0-9]/.test(displayPortion);
+        const hasSpecial = /[^A-Za-z0-9]/.test(displayPortion);
+
+        // If all types are present, return original
+        if (hasUppercase && hasLowercase && hasNumbers && hasSpecial) {
+            return text;
+        }
+
+        // Create a deterministic seed from: original message + passphrase + maxLength + display portion
+        // This ensures same inputs always produce same output
+        const seedString = originalMessage + passphrase + maxLength.toString() + displayPortion;
+        let seed = 0;
+        for (let i = 0; i < seedString.length; i++) {
+            seed = ((seed << 5) - seed) + seedString.charCodeAt(i);
+            seed = seed & seed; // Convert to 32bit integer
+        }
+
+        // Deterministic random function based on seed
+        function seededRandom() {
+            seed = (seed * 9301 + 49297) % 233280;
+            return seed / 233280;
+        }
+
+        // Character pools for replacement
+        const uppercaseChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const lowercaseChars = 'abcdefghijklmnopqrstuvwxyz';
+        const numberChars = '0123456789';
+        const specialChars = '!@#$%&*';
+
+        // Convert display portion to array for manipulation
+        let chars = displayPortion.split('');
+        
+        // Build list of required replacements
+        const replacementsNeeded = [];
+        if (!hasUppercase) replacementsNeeded.push({ type: 'upper', pool: uppercaseChars });
+        if (!hasLowercase) replacementsNeeded.push({ type: 'lower', pool: lowercaseChars });
+        if (!hasNumbers) replacementsNeeded.push({ type: 'number', pool: numberChars });
+        if (!hasSpecial) replacementsNeeded.push({ type: 'special', pool: specialChars });
+
+        // Track used positions to avoid overwriting
+        const usedPositions = new Set();
+
+        // Replace characters deterministically - one for each missing type
+        for (const replacement of replacementsNeeded) {
+            let position;
+            let attempts = 0;
+            
+            // Find an unused position deterministically
+            do {
+                position = Math.floor(seededRandom() * chars.length);
+                attempts++;
+            } while (usedPositions.has(position) && attempts < 100);
+            
+            usedPositions.add(position);
+            
+            // Select character from pool deterministically
+            const charIndex = Math.floor(seededRandom() * replacement.pool.length);
+            chars[position] = replacement.pool[charIndex];
+        }
+
+        // Combine modified display portion with unmodified remainder
+        return chars.join('') + remainingPortion;
+    }
+
+    // Set Output Format
+    function setFormat(format) {
+        outputFormat = format;
+        document.querySelectorAll('.format-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.format === format);
+        });
+        update();
+    }
+
+    // Toggle Passphrase Visibility
+    document.getElementById('togglePw').addEventListener('click', function() {
+        const isHidden = pwInput.type === 'password';
+        pwInput.type = isHidden ? 'text' : 'password';
+        this.textContent = isHidden ? '🔒' : '👁️';
+    });
+
+    // Copy Result
+    function copyResult() {
+        const text = fullOutput || outDiv.innerText;
+        if (text && !outDiv.classList.contains('empty')) {
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById('copyBtn');
+                const icon = document.getElementById('copyIcon');
+                btn.classList.add('success');
+                icon.textContent = '✅';
+                setTimeout(() => {
+                    btn.classList.remove('success');
+                    icon.textContent = '📋';
+                }, 1500);
+            });
+        }
+    }
+
+    // Clear All Fields
+    function clearAll() {
+        msgInput.value = '';
+        pwInput.value = '';
+        outDiv.innerText = 'Enter a message and passphrase to begin...';
+        outDiv.classList.add('empty');
+        strengthMeter.style.display = 'none';
+        charCount.textContent = '';
+        fullOutput = '';
+    }
+
+    // Check Passphrase Strength
+    function checkPassphraseStrength(password) {
+        if (!password) {
+            strengthMeter.style.display = 'none';
+            return;
+        }
+
+        strengthMeter.style.display = 'block';
+        let strength = 0;
+        
+        if (password.length >= 8) strength += 20;
+        if (password.length >= 12) strength += 20;
+        if (password.length >= 16) strength += 10;
+        if (/[a-z]/.test(password)) strength += 15;
+        if (/[A-Z]/.test(password)) strength += 15;
+        if (/[0-9]/.test(password)) strength += 10;
+        if (/[^a-zA-Z0-9]/.test(password)) strength += 10;
+
+        const colors = {
+            weak: '#ef4444',
+            fair: '#f59e0b',
+            good: '#3b82f6',
+            strong: '#10b981'
+        };
+
+        let label, color;
+        if (strength < 40) {
+            label = 'Weak';
+            color = colors.weak;
+        } else if (strength < 60) {
+            label = 'Fair';
+            color = colors.fair;
+        } else if (strength < 80) {
+            label = 'Good';
+            color = colors.good;
+        } else {
+            label = 'Strong';
+            color = colors.strong;
+        }
+
+        strengthFill.style.width = strength + '%';
+        strengthFill.style.background = color;
+        strengthLabel.textContent = `Strength: ${label}`;
+        strengthLabel.style.color = color;
+    }
+
+    // Encoding Helper Functions
+    function arrayBufferToBase64(buffer) {
+        const bytes = new Uint8Array(buffer);
+        const binary = String.fromCharCode(...bytes);
+        return btoa(binary);
+    }
+
+    function arrayBufferToBase64Url(buffer) {
+        return arrayBufferToBase64(buffer)
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=+$/, '');
+    }
+
+    function arrayBufferToHex(buffer) {
+        return Array.from(new Uint8Array(buffer))
+            .map(b => b.toString(16).padStart(2, '0'))
+            .join('');
+    }
+
+    async function arrayBufferToCompressed(buffer) {
+        const bytes = new Uint8Array(buffer);
+        const stream = new ReadableStream({
+            start(controller) {
+                controller.enqueue(bytes);
+                controller.close();
+            }
+        });
+        
+        const compressedStream = stream.pipeThrough(new CompressionStream('gzip'));
+        const chunks = [];
+        const reader = compressedStream.getReader();
+        
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value);
+        }
+        
+        const compressed = new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0));
+        let offset = 0;
+        for (const chunk of chunks) {
+            compressed.set(chunk, offset);
+            offset += chunk.length;
+        }
+        
+        return arrayBufferToBase64(compressed);
+    }
+
+    function base64ToArrayBuffer(base64) {
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        return bytes;
+    }
+
+    function base64UrlToArrayBuffer(base64url) {
+        const base64 = base64url
+            .replace(/-/g, '+')
+            .replace(/_/g, '/');
+        const padding = '='.repeat((4 - base64.length % 4) % 4);
+        return base64ToArrayBuffer(base64 + padding);
+    }
+
+    function hexToArrayBuffer(hex) {
+        const bytes = new Uint8Array(hex.length / 2);
+        for (let i = 0; i < hex.length; i += 2) {
+            bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+        }
+        return bytes;
+    }
+
+    async function compressedToArrayBuffer(compressed) {
+        const bytes = base64ToArrayBuffer(compressed);
+        const stream = new ReadableStream({
+            start(controller) {
+                controller.enqueue(bytes);
+                controller.close();
+            }
+        });
+        
+        const decompressedStream = stream.pipeThrough(new DecompressionStream('gzip'));
+        const chunks = [];
+        const reader = decompressedStream.getReader();
+        
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value);
+        }
+        
+        const decompressed = new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0));
+        let offset = 0;
+        for (const chunk of chunks) {
+            decompressed.set(chunk, offset);
+            offset += chunk.length;
+        }
+        
+        return decompressed;
+    }
+
+    function encodeOutput(buffer, format) {
+        switch (format) {
+            case 'base64url':
+                return arrayBufferToBase64Url(buffer);
+            case 'hex':
+                return arrayBufferToHex(buffer);
+            case 'compressed':
+                return arrayBufferToCompressed(buffer);
+            default:
+                return arrayBufferToBase64(buffer);
+        }
+    }
+
+    async function decodeInput(encoded, format) {
+        switch (format) {
+            case 'base64url':
+                return base64UrlToArrayBuffer(encoded);
+            case 'hex':
+                return hexToArrayBuffer(encoded);
+            case 'compressed':
+                return await compressedToArrayBuffer(encoded);
+            default:
+                return base64ToArrayBuffer(encoded);
+        }
+    }
+
+    // Derive Key using PBKDF2
+    async function deriveKey(password, salt) {
+        const enc = new TextEncoder();
+        const keyMaterial = await crypto.subtle.importKey(
+            'raw',
+            enc.encode(password),
+            'PBKDF2',
+            false,
+            ['deriveBits', 'deriveKey']
+        );
+        
+        return crypto.subtle.deriveKey(
+            {
+                name: 'PBKDF2',
+                salt: salt,
+                iterations: 100000,
+                hash: 'SHA-256'
+            },
+            keyMaterial,
+            { name: 'AES-GCM', length: 256 },
+            false,
+            ['encrypt', 'decrypt']
+        );
+    }
+
+    // Generate deterministic salt and IV from password and text
+    async function generateDeterministicSaltAndIV(password, text) {
+        const enc = new TextEncoder();
+        const data = enc.encode(password + text);
+        
+        // Generate hash
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = new Uint8Array(hashBuffer);
+        
+        // Use first 16 bytes for salt, next 12 bytes for IV
+        const salt = hashArray.slice(0, 16);
+        const iv = hashArray.slice(16, 28);
+        
+        return { salt, iv };
+    }
+
+    // Encrypt using AES-GCM
+    async function encryptText(text, password, format) {
+        const enc = new TextEncoder();
+        
+        // Generate deterministic salt and IV
+        const { salt, iv } = await generateDeterministicSaltAndIV(password, text);
+        
+        const key = await deriveKey(password, salt);
+        
+        const encrypted = await crypto.subtle.encrypt(
+            { name: 'AES-GCM', iv: iv },
+            key,
+            enc.encode(text)
+        );
+        
+        const combined = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
+        combined.set(salt, 0);
+        combined.set(iv, salt.length);
+        combined.set(new Uint8Array(encrypted), salt.length + iv.length);
+        
+        return await encodeOutput(combined, format);
+    }
+
+    // Decrypt using AES-GCM
+    async function decryptText(encryptedData, password, format) {
+        const data = await decodeInput(encryptedData, format);
+        const salt = data.slice(0, 16);
+        const iv = data.slice(16, 28);
+        const encrypted = data.slice(28);
+        
+        const key = await deriveKey(password, salt);
+        
+        const decrypted = await crypto.subtle.decrypt(
+            { name: 'AES-GCM', iv: iv },
+            key,
+            encrypted
+        );
+        
+        return new TextDecoder().decode(decrypted);
+    }
+
+    // Main Update Function (generates the output)
+    async function update() {
+        const text = msgInput.value;
+        const password = pwInput.value;
+
+        if (!password || !text) {
+            outDiv.innerText = text || password ? 'Enter both message and passphrase...' : 'Enter a message and passphrase to begin...';
+            outDiv.classList.add('empty');
+            charCount.textContent = '';
+            fullOutput = '';
+            return;
+        }
+
+        outDiv.classList.remove('empty');
+
+        try {
+            if (isEncryptMode) {
+                const encrypted = await encryptText(text, password, outputFormat);
+                fullOutput = encrypted; // Store complete output
+            } else {
+                const decrypted = await decryptText(text, password, outputFormat);
+                fullOutput = decrypted; // Store complete output
+            }
+            updateDisplay(); // Update what's shown
+        } catch(e) {
+            outDiv.innerText = '❌ Error: Invalid ciphertext or incorrect passphrase';
+            outDiv.style.color = 'var(--error)';
+            charCount.textContent = '';
+            fullOutput = '';
+            setTimeout(() => {
+                outDiv.style.color = '#e5e7eb';
+            }, 2000);
+        }
+    }
+
+    // Update Display (handles showing/hiding characters based on limit)
+    function updateDisplay() {
+        if (!fullOutput) {
+            outDiv.innerText = 'Enter a message and passphrase to begin...';
+            outDiv.classList.add('empty');
+            charCount.textContent = '';
+            return;
+        }
+
+        outDiv.classList.remove('empty');
+        const originalLength = msgInput.value.length;
+        
+        // Apply character type enforcement with all relevant inputs for deterministic result
+        const modifiedOutput = ensureAllCharacterTypes(
+            fullOutput, 
+            maxChars, 
+            msgInput.value,  // original message
+            pwInput.value    // passphrase
+        );
+        let displayOutput = modifiedOutput;
+        let isHidden = false;
+
+        // Apply visual limit if set (but keep full output stored)
+        if (maxChars && modifiedOutput.length > maxChars) {
+            displayOutput = modifiedOutput.substring(0, maxChars);
+            isHidden = true;
+        }
+
+        outDiv.innerText = displayOutput;
+        
+        // Update character count
+        if (isEncryptMode) {
+            const ratio = ((fullOutput.length / originalLength) * 100).toFixed(0);
+            if (isHidden) {
+                charCount.textContent = `Showing ${maxChars} of ${fullOutput.length} characters (full text copied)`;
+            } else {
+                charCount.textContent = `${fullOutput.length} characters (${ratio}% of original)`;
+            }
+        } else {
+            if (isHidden) {
+                charCount.textContent = `Showing ${maxChars} of ${fullOutput.length} characters (full text copied)`;
+            } else {
+                charCount.textContent = `${fullOutput.length} characters`;
+            }
+        }
+        
+        // Update character type checks
+        updateCharacterChecks();
+    }
+
+    // Event Listeners
+    msgInput.addEventListener('input', update);
+    pwInput.addEventListener('input', (e) => {
+        checkPassphraseStrength(e.target.value);
+        update();
+    });
+    
+    maxCharsInput.addEventListener('input', (e) => {
+        let value = parseInt(e.target.value);
+        
+        // Enforce max limit of 15
+        if (value > 15) {
+            value = 15;
+            e.target.value = 15;
+        }
+        
+        maxChars = isNaN(value) || value <= 0 ? 15 : value;
+        updateDisplay();
+    });
+    
+    // Initialize default value on load
+    window.addEventListener('DOMContentLoaded', () => {
+        maxCharsInput.value = maxChars;
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey || e.metaKey) {
+            if (e.key === 'k') {
+                e.preventDefault();
+                clearAll();
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
